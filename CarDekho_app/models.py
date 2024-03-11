@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator,MaxValueValidator
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 # Create your models here.
 class ShowRoomList(models.Model):
     name = models.CharField(max_length = 50)
@@ -22,7 +22,7 @@ class CarList(models.Model):
         return self.name
     
 class Reviews(models.Model):
-    apiuser = models.ForeignKey(get_user_model(),on_delete = models.CASCADE)
+    apiuser = models.ForeignKey(User,on_delete = models.CASCADE)
     rating = models.IntegerField(validators =[MinValueValidator(1),MaxValueValidator(5)])
     comment = models.TextField(null = True)
     car = models.ForeignKey(CarList,on_delete =models.CASCADE,related_name = 'Car_Review')

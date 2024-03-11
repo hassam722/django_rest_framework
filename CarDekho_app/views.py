@@ -2,13 +2,13 @@ from django.shortcuts import render
 from .models import CarList,ShowRoomList,Reviews
 from .api_files.serializer import CarListSerializer,ShowRoomListSerializer,ReviewSerializer
 from .api_files.permission import ReviewUserOrReadOnlyPermission
-
+from .api_files.pagination import ShowRoomPageNumberPagination
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authentication import BasicAuthentication,SessionAuthentication,TokenAuthentication
 from rest_framework.permissions import IsAuthenticated,AllowAny,IsAdminUser,DjangoModelPermissions
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView,ListAPIView,RetrieveUpdateDestroyAPIView
 from rest_framework.mixins import ListModelMixin,CreateModelMixin,RetrieveModelMixin,UpdateModelMixin
 from rest_framework import viewsets
 from django.shortcuts import get_object_or_404
@@ -41,45 +41,33 @@ from django.shortcuts import get_object_or_404
 #         return Response(serializer.errors, status=400)
 
 
-class Review_list_view(ListModelMixin,CreateModelMixin,GenericAPIView):
+class Review_list_view(ListAPIView):
+    authentication_classes = [TokenAuthentication]
     queryset = Reviews.objects.all()
     serializer_class = ReviewSerializer
+
+
+ 
+class Review_detail_view(RetrieveUpdateDestroyAPIView):
     authentication_classes = [TokenAuthentication]
-
-
-    def get(self,request,*args,**kwargs):
-        return self.list(request, *args, **kwargs)
-    
-    def post(self,request,*args,**kwargs):
-        return self.create(request,*args,**kwargs)
-    
-class Review_detail_view(RetrieveModelMixin,UpdateModelMixin,GenericAPIView):
     queryset = Reviews.objects.all()
     serializer_class = ReviewSerializer
-    authentication_classes = [TokenAuthentication]
-
-    # permission_classes = [DjangoModelPermissions]
 
     
-    def get(self,request,*args,**kwargs):
-        return self.retrieve(request, *args, **kwargs)
-    
-    def put(self,request,*args,**kwargs):
-        return self.update(request, *args, **kwargs)
-
 
 
 
 class ShowRoom_list_view(APIView):
-    # permission_classes = [DjangoModelPermissions]
-    # authentication_classes = [BasicAuthentication]
-    # permission_classes = [IsAuthenticated]
-    # authentication_classes = [SessionAuthentication]
+    pagination_class =ShowRoomPageNumberPagination()
+    throttle_scope = 'showroom_throtle'
+
 
     def get(self,request):
         showroomlist = ShowRoomList.objects.all()
-        serializer = ShowRoomListSerializer(showroomlist, many=True,context  ={'request':request})
-        return Response(serializer.data)
+        page = self.pagination_class.paginate_queryset(queryset=showroomlist,request=request)
+        serializer = ShowRoomListSerializer(page, many=True,context  ={'request':request})
+        # return Response(serializer.data)
+        return self.pagination_class.get_paginated_response(serializer.data)
     
     def post(self,request):
         serializer = ShowRoomListSerializer(data=request.data)

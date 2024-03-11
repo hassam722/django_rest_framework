@@ -27,7 +27,7 @@ class ShowRoomListSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    apiuser = serializers.StringRelatedField(read_only = True)
+    # apiuser = serializers.StringRelatedField(read_only = True)
     class Meta:
         model = Reviews
         fields = '__all__'
